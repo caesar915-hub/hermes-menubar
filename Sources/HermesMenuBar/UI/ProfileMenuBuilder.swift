@@ -35,12 +35,17 @@ public final class ProfileMenuBuilder {
         statusItem.isEnabled = false
         menu.addItem(statusItem)
 
-        // Model Line
-        if let model = profile.modelName {
-            let modelItem = NSMenuItem(title: "  Model: 🧠 \(model)", action: nil, keyEquivalent: "")
-            modelItem.isEnabled = false
-            menu.addItem(modelItem)
-        }
+        // Model Selector Submenu
+        let currentModel = profile.modelName ?? "Unknown"
+        let modelMenuItem = NSMenuItem(title: "  Model: 🧠 \(currentModel)", action: nil, keyEquivalent: "")
+        
+        let modelSubmenu = NSMenu()
+        let submenuDelegate = ModelSubmenuDelegate(profile: profile)
+        modelSubmenu.delegate = submenuDelegate
+        // Retain delegate via representedObject so it stays alive while menu is open
+        modelMenuItem.representedObject = submenuDelegate
+        modelMenuItem.submenu = modelSubmenu
+        menu.addItem(modelMenuItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -139,6 +144,107 @@ public final class ProfileMenuBuilder {
     }
 }
 
+// MARK: - Lazy Model Submenu Delegate
+
+@MainActor
+public final class ModelSubmenuDelegate: NSObject, NSMenuDelegate {
+    public let profile: HermesProfile
+
+    public init(profile: HermesProfile) {
+        self.profile = profile
+        super.init()
+    }
+
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+
+        let catalog = ModelManager.shared.discoverModels(for: profile)
+
+        // 1. Current Active Model Section
+        let currentHeader = NSMenuItem(title: "CURRENT MODEL", action: nil, keyEquivalent: "")
+        currentHeader.isEnabled = false
+        menu.addItem(currentHeader)
+
+        if let active = catalog.activeModel {
+            let item = NSMenuItem(
+                title: "  🧠 \(active.identifier) (Active)",
+                action: #selector(MenuActions.selectModel(_:)),
+                keyEquivalent: ""
+            )
+            item.target = MenuActions.shared
+            item.state = .on
+            item.representedObject = (profile: profile, model: active)
+            menu.addItem(item)
+        } else {
+            let item = NSMenuItem(title: "  (None configured)", action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            menu.addItem(item)
+        }
+
+        // 2. Configured & Fallback Models from config.yaml
+        if !catalog.configuredModels.isEmpty {
+            menu.addItem(NSMenuItem.separator())
+            let confHeader = NSMenuItem(title: "CONFIGURED IN CONFIG.YAML", action: nil, keyEquivalent: "")
+            confHeader.isEnabled = false
+            menu.addItem(confHeader)
+
+            for m in catalog.configuredModels {
+                let item = NSMenuItem(
+                    title: "  🧠 \(m.displayName)",
+                    action: #selector(MenuActions.selectModel(_:)),
+                    keyEquivalent: ""
+                )
+                item.target = MenuActions.shared
+                item.state = m.isCurrent ? .on : .off
+                item.representedObject = (profile: profile, model: m)
+                menu.addItem(item)
+            }
+        }
+
+        // 3. Provider Presets from .env API keys
+        if !catalog.providerPresets.isEmpty {
+            menu.addItem(NSMenuItem.separator())
+            let presetHeader = NSMenuItem(title: "AVAILABLE VIA .ENV API KEYS", action: nil, keyEquivalent: "")
+            presetHeader.isEnabled = false
+            menu.addItem(presetHeader)
+
+            let sortedProviders = catalog.providerPresets.keys.sorted()
+            for prov in sortedProviders {
+                if let models = catalog.providerPresets[prov] {
+                    let provItem = NSMenuItem(title: "  ▶ \(prov)", action: nil, keyEquivalent: "")
+                    let provSub = NSMenu()
+                    for pm in models {
+                        let subItem = NSMenuItem(
+                            title: "🧠 \(pm.displayName)",
+                            action: #selector(MenuActions.selectModel(_:)),
+                            keyEquivalent: ""
+                        )
+                        subItem.target = MenuActions.shared
+                        subItem.state = pm.isCurrent ? .on : .off
+                        subItem.representedObject = (profile: profile, model: pm)
+                        provSub.addItem(subItem)
+                    }
+                    provItem.submenu = provSub
+                    menu.addItem(provItem)
+                }
+            }
+        }
+
+        // 4. Custom Model Prompt
+        menu.addItem(NSMenuItem.separator())
+        let customItem = NSMenuItem(
+            title: "✏️ Enter Custom Model Name...",
+            action: #selector(MenuActions.promptCustomModel(_:)),
+            keyEquivalent: ""
+        )
+        customItem.target = MenuActions.shared
+        customItem.representedObject = profile
+        menu.addItem(customItem)
+    }
+}
+
+// MARK: - Menu Actions Coordinator
+
 @MainActor
 public final class MenuActions: NSObject {
     public static let shared = MenuActions()
@@ -176,6 +282,50 @@ public final class MenuActions: NSObject {
         runner.restartGateway(for: profile) { [weak self] _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 self?.monitor.refreshNow()
+            }
+        }
+    }
+
+    @objc public func selectModel(_ sender: NSMenuItem) {
+        guard let data = sender.representedObject as? (profile: HermesProfile, model: ModelInfo) else { return }
+        let profile = data.profile
+        let model = data.model
+
+        ModelManager.shared.setModel(model, for: profile, restartIfRunning: true) { success in
+            if success {
+                print("Successfully switched \(profile.name) to model \(model.identifier)")
+            }
+        }
+    }
+
+    @objc public func promptCustomModel(_ sender: NSMenuItem) {
+        guard let profile = sender.representedObject as? HermesProfile else { return }
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        let alert = NSAlert()
+        alert.messageText = "Select Model for \(profile.displayName)"
+        alert.informativeText = "Enter the model identifier (e.g. anthropic/claude-3-7-sonnet, openai/gpt-4o, ollama/llama3.2):"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Set Model & Apply")
+        alert.addButton(withTitle: "Cancel")
+
+        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
+        input.stringValue = profile.modelName ?? ""
+        alert.accessoryView = input
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            let entered = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !entered.isEmpty {
+                let customModel = ModelInfo(
+                    identifier: entered,
+                    displayName: entered,
+                    provider: "custom",
+                    category: .custom,
+                    isCurrent: true
+                )
+                ModelManager.shared.setModel(customModel, for: profile, restartIfRunning: true)
             }
         }
     }
