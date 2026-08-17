@@ -15,6 +15,7 @@ cask "hermes-menubar" do
   depends_on macos: :ventura
 
   app "HermesMenuBar.app"
+  binary "#{appdir}/HermesMenuBar.app/Contents/MacOS/HermesMenuBar", target: "hermes-menubar"
 
   zap trash: [
     "~/Library/Application Support/HermesMenuBar",

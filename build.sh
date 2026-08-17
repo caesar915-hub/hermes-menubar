@@ -121,10 +121,27 @@ echo "======================================================"
 echo "  ✅ Installed to ${INSTALL_DIR}/${BUNDLE_NAME}"
 echo "======================================================"
 
-# 8. Create DMG if requested
+# 8. Install CLI launcher script to ~/.local/bin/hermes-menubar
+mkdir -p "${HOME}/.local/bin"
+cat << 'CLI_EOF' > "${HOME}/.local/bin/hermes-menubar"
+#!/usr/bin/env bash
+if pgrep -x "HermesMenuBar" >/dev/null 2>&1; then
+    echo "⚡️ Hermes Menu Bar is already running (PID $(pgrep -x HermesMenuBar))."
+else
+    echo "🚀 Launching Hermes Menu Bar..."
+    open -a "HermesMenuBar" 2>/dev/null || open "$HOME/Applications/HermesMenuBar.app" 2>/dev/null || open "/Applications/HermesMenuBar.app"
+    sleep 0.5
+    if pgrep -x "HermesMenuBar" >/dev/null 2>&1; then
+        echo "✅ Hermes Menu Bar running (PID $(pgrep -x HermesMenuBar))."
+    fi
+fi
+CLI_EOF
+chmod +x "${HOME}/.local/bin/hermes-menubar"
+
+# 9. Create DMG if requested
 if [ "$CREATE_DMG" = true ]; then
     chmod +x "${SCRIPT_DIR}/scripts/create_dmg.sh"
-    "${SCRIPT_DIR}/scripts/create_dmg.sh" "${APP_BUNDLE}" "1.0.0"
+    "${SCRIPT_DIR}/scripts/create_dmg.sh" "${APP_BUNDLE}" "1.1.0"
 fi
 
 # 9. Restart running instance if requested
