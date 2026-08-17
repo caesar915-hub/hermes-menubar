@@ -1,6 +1,6 @@
 cask "hermes-menubar" do
   version "1.0.0"
-  sha256 "b746b8349d005eda2cad84e19d4c8ac1e60b03e048385b31460d776aa60c0809"
+  sha256 "c213fa820d3e63e484e3556329f6094d6351265ed280ff474659ffa68d1f1770"
 
   url "https://github.com/caesar915-hub/hermes-menubar/releases/download/v#{version}/HermesMenuBar-#{version}.dmg"
   name "Hermes Menu Bar"

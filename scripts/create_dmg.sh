@@ -31,7 +31,7 @@ TMP_DIR=$(mktemp -d /tmp/hermes_dmg.XXXXXX)
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
 # Copy app bundle to staging
-cp -R "${APP_PATH}" "${TMP_DIR}/HermesMenuBar.app"
+cp -R "${APP_PATH}" "${TMP_DIR}/"
 
 # Create symlink to /Applications
 ln -s /Applications "${TMP_DIR}/Applications"
