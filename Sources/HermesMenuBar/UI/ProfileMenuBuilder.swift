@@ -13,36 +13,27 @@ public final class ProfileMenuBuilder {
         menu.autoenablesItems = false
 
         // 1. Profile Title & Header
-        let titleItem = NSMenuItem(title: "Hermes Profile: \(profile.name.uppercased())", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "Hermes: \(profile.displayName)", action: nil, keyEquivalent: "")
+        titleItem.image = sfImage("cpu", pointSize: 13)
         let titleFont = NSFont.boldSystemFont(ofSize: 13)
-        titleItem.attributedTitle = NSAttributedString(string: "🤖 Hermes: \(profile.displayName)", attributes: [.font: titleFont])
+        titleItem.attributedTitle = NSAttributedString(string: "Hermes: \(profile.displayName)", attributes: [.font: titleFont])
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 
         // Status Line
-        let statusEmoji: String
-        switch profile.status {
-        case .running(_, let connected, _):
-            statusEmoji = connected ? "🟢" : "🟡"
-        case .stopped:
-            statusEmoji = "⚪"
-        case .transitioning:
-            statusEmoji = "⏳"
-        case .error:
-            statusEmoji = "🔴"
-        }
-        let statusItem = NSMenuItem(title: "  Status: \(statusEmoji) \(profile.status.statusText)", action: nil, keyEquivalent: "")
+        let statusItem = NSMenuItem(title: "Status: \(profile.status.statusText)", action: nil, keyEquivalent: "")
+        statusItem.image = statusCircleImage(for: profile.status)
         statusItem.isEnabled = false
         menu.addItem(statusItem)
 
         // Model Selector Submenu
         let currentModel = profile.modelName ?? "Unknown"
-        let modelMenuItem = NSMenuItem(title: "  Model: 🧠 \(currentModel)", action: nil, keyEquivalent: "")
-        
+        let modelMenuItem = NSMenuItem(title: "Model: \(currentModel)", action: nil, keyEquivalent: "")
+        modelMenuItem.image = sfImage("brain", pointSize: 13)
+
         let modelSubmenu = NSMenu()
         let submenuDelegate = ModelSubmenuDelegate(profile: profile)
         modelSubmenu.delegate = submenuDelegate
-        // Retain delegate via representedObject so it stays alive while menu is open
         modelMenuItem.representedObject = submenuDelegate
         modelMenuItem.submenu = modelSubmenu
         menu.addItem(modelMenuItem)
@@ -52,24 +43,28 @@ public final class ProfileMenuBuilder {
         // 2. Main Process Controls for this profile
         switch profile.status {
         case .running:
-            let stopItem = NSMenuItem(title: "🛑 Stop Gateway", action: #selector(MenuActions.stopProfile(_:)), keyEquivalent: "s")
+            let stopItem = NSMenuItem(title: "Stop Gateway", action: #selector(MenuActions.stopProfile(_:)), keyEquivalent: "s")
+            stopItem.image = sfImage("stop.fill", pointSize: 12, color: .systemRed)
             stopItem.target = MenuActions.shared
             stopItem.representedObject = profile
             menu.addItem(stopItem)
 
-            let restartItem = NSMenuItem(title: "🔄 Restart Gateway", action: #selector(MenuActions.restartProfile(_:)), keyEquivalent: "r")
+            let restartItem = NSMenuItem(title: "Restart Gateway", action: #selector(MenuActions.restartProfile(_:)), keyEquivalent: "r")
+            restartItem.image = sfImage("arrow.clockwise", pointSize: 12, color: .systemOrange)
             restartItem.target = MenuActions.shared
             restartItem.representedObject = profile
             menu.addItem(restartItem)
 
         case .stopped, .error:
-            let startItem = NSMenuItem(title: "🚀 Start Gateway", action: #selector(MenuActions.startProfile(_:)), keyEquivalent: "s")
+            let startItem = NSMenuItem(title: "Start Gateway", action: #selector(MenuActions.startProfile(_:)), keyEquivalent: "s")
+            startItem.image = sfImage("play.fill", pointSize: 12, color: .systemGreen)
             startItem.target = MenuActions.shared
             startItem.representedObject = profile
             menu.addItem(startItem)
 
         case .transitioning:
-            let transItem = NSMenuItem(title: "⏳ Action in progress...", action: nil, keyEquivalent: "")
+            let transItem = NSMenuItem(title: "Action in progress...", action: nil, keyEquivalent: "")
+            transItem.image = sfImage("hourglass", pointSize: 12, color: .systemOrange)
             transItem.isEnabled = false
             menu.addItem(transItem)
         }
@@ -77,21 +72,25 @@ public final class ProfileMenuBuilder {
         menu.addItem(NSMenuItem.separator())
 
         // 3. Quick Launchers
-        let tgAppItem = NSMenuItem(title: "📱 Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "m")
+        let tgAppItem = NSMenuItem(title: "Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "m")
+        tgAppItem.image = sfImage("paperplane.fill", pointSize: 12, color: .systemBlue)
         tgAppItem.target = MenuActions.shared
         menu.addItem(tgAppItem)
 
-        let chatItem = NSMenuItem(title: "💬 Open Chat in Terminal", action: #selector(MenuActions.openChat(_:)), keyEquivalent: "t")
+        let chatItem = NSMenuItem(title: "Open Chat in Terminal", action: #selector(MenuActions.openChat(_:)), keyEquivalent: "t")
+        chatItem.image = sfImage("terminal.fill", pointSize: 12)
         chatItem.target = MenuActions.shared
         chatItem.representedObject = profile
         menu.addItem(chatItem)
 
-        let logItem = NSMenuItem(title: "📜 Tail Live Logs (gateway.log)", action: #selector(MenuActions.openLogs(_:)), keyEquivalent: "l")
+        let logItem = NSMenuItem(title: "Tail Live Logs (gateway.log)", action: #selector(MenuActions.openLogs(_:)), keyEquivalent: "l")
+        logItem.image = sfImage("doc.text.fill", pointSize: 12)
         logItem.target = MenuActions.shared
         logItem.representedObject = profile
         menu.addItem(logItem)
 
-        let folderItem = NSMenuItem(title: "📁 Open Profile Folder in Finder", action: #selector(MenuActions.openFolder(_:)), keyEquivalent: "o")
+        let folderItem = NSMenuItem(title: "Open Profile Folder in Finder", action: #selector(MenuActions.openFolder(_:)), keyEquivalent: "o")
+        folderItem.image = sfImage("folder.fill", pointSize: 12)
         folderItem.target = MenuActions.shared
         folderItem.representedObject = profile
         menu.addItem(folderItem)
@@ -100,18 +99,22 @@ public final class ProfileMenuBuilder {
 
         // 4. Batch Actions (All Profiles)
         let allSubmenu = NSMenu()
-        let batchMenuItem = NSMenuItem(title: "⚡️ All Profiles Actions", action: nil, keyEquivalent: "")
+        let batchMenuItem = NSMenuItem(title: "All Profiles Actions", action: nil, keyEquivalent: "")
+        batchMenuItem.image = sfImage("bolt.fill", pointSize: 12, color: .systemYellow)
         batchMenuItem.submenu = allSubmenu
 
-        let startAll = NSMenuItem(title: "🚀 Start All Gateways", action: #selector(MenuActions.startAllProfiles), keyEquivalent: "")
+        let startAll = NSMenuItem(title: "Start All Gateways", action: #selector(MenuActions.startAllProfiles), keyEquivalent: "")
+        startAll.image = sfImage("play.fill", pointSize: 12, color: .systemGreen)
         startAll.target = MenuActions.shared
         allSubmenu.addItem(startAll)
 
-        let restartAll = NSMenuItem(title: "🔄 Restart All Gateways", action: #selector(MenuActions.restartAllProfiles), keyEquivalent: "")
+        let restartAll = NSMenuItem(title: "Restart All Gateways", action: #selector(MenuActions.restartAllProfiles), keyEquivalent: "")
+        restartAll.image = sfImage("arrow.clockwise", pointSize: 12, color: .systemOrange)
         restartAll.target = MenuActions.shared
         allSubmenu.addItem(restartAll)
 
-        let stopAll = NSMenuItem(title: "🛑 Stop All Gateways", action: #selector(MenuActions.stopAllProfiles), keyEquivalent: "")
+        let stopAll = NSMenuItem(title: "Stop All Gateways", action: #selector(MenuActions.stopAllProfiles), keyEquivalent: "")
+        stopAll.image = sfImage("stop.fill", pointSize: 12, color: .systemRed)
         stopAll.target = MenuActions.shared
         allSubmenu.addItem(stopAll)
 
@@ -120,23 +123,26 @@ public final class ProfileMenuBuilder {
         menu.addItem(NSMenuItem.separator())
 
         // 5. Settings / Tools
-        let refreshItem = NSMenuItem(title: "🔄 Refresh Status Now", action: #selector(MenuActions.refreshNow), keyEquivalent: "")
+        let refreshItem = NSMenuItem(title: "Refresh Status Now", action: #selector(MenuActions.refreshNow), keyEquivalent: "")
+        refreshItem.image = sfImage("arrow.triangle.2.circlepath", pointSize: 12)
         refreshItem.target = MenuActions.shared
         menu.addItem(refreshItem)
 
         let isMulti = StatusItemManager.shared.isMultiIconMode
         let toggleModeItem = NSMenuItem(
-            title: isMulti ? "Mode: Multi-Icon (Click for Single Icon)" : "Mode: Single Icon (Click for Multi-Icon)",
+            title: isMulti ? "Display Mode: Multi-Icon" : "Display Mode: Single Icon",
             action: #selector(MenuActions.toggleDisplayMode),
             keyEquivalent: ""
         )
+        toggleModeItem.image = sfImage("rectangle.grid.1x2.fill", pointSize: 12)
         toggleModeItem.target = MenuActions.shared
         menu.addItem(toggleModeItem)
 
         menu.addItem(NSMenuItem.separator())
 
         // 6. Quit
-        let quitItem = NSMenuItem(title: "❌ Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "q")
+        quitItem.image = sfImage("power", pointSize: 12, color: .systemRed)
         quitItem.target = MenuActions.shared
         menu.addItem(quitItem)
 
@@ -167,16 +173,17 @@ public final class ModelSubmenuDelegate: NSObject, NSMenuDelegate {
 
         if let active = catalog.activeModel {
             let item = NSMenuItem(
-                title: "  🧠 \(active.identifier) (Active)",
+                title: "\(active.identifier) (Active)",
                 action: #selector(MenuActions.selectModel(_:)),
                 keyEquivalent: ""
             )
+            item.image = sfImage("brain.head.profile", pointSize: 12, color: .systemPurple)
             item.target = MenuActions.shared
             item.state = .on
             item.representedObject = (profile: profile, model: active)
             menu.addItem(item)
         } else {
-            let item = NSMenuItem(title: "  (None configured)", action: nil, keyEquivalent: "")
+            let item = NSMenuItem(title: "(None configured)", action: nil, keyEquivalent: "")
             item.isEnabled = false
             menu.addItem(item)
         }
@@ -190,10 +197,11 @@ public final class ModelSubmenuDelegate: NSObject, NSMenuDelegate {
 
             for m in catalog.configuredModels {
                 let item = NSMenuItem(
-                    title: "  🧠 \(m.displayName)",
+                    title: m.displayName,
                     action: #selector(MenuActions.selectModel(_:)),
                     keyEquivalent: ""
                 )
+                item.image = sfImage("cube.fill", pointSize: 12, color: .systemTeal)
                 item.target = MenuActions.shared
                 item.state = m.isCurrent ? .on : .off
                 item.representedObject = (profile: profile, model: m)
@@ -211,14 +219,16 @@ public final class ModelSubmenuDelegate: NSObject, NSMenuDelegate {
             let sortedProviders = catalog.providerPresets.keys.sorted()
             for prov in sortedProviders {
                 if let models = catalog.providerPresets[prov] {
-                    let provItem = NSMenuItem(title: "  ▶ \(prov)", action: nil, keyEquivalent: "")
+                    let provItem = NSMenuItem(title: prov, action: nil, keyEquivalent: "")
+                    provItem.image = sfImage("key.fill", pointSize: 12, color: .systemYellow)
                     let provSub = NSMenu()
                     for pm in models {
                         let subItem = NSMenuItem(
-                            title: "🧠 \(pm.displayName)",
+                            title: pm.displayName,
                             action: #selector(MenuActions.selectModel(_:)),
                             keyEquivalent: ""
                         )
+                        subItem.image = sfImage("sparkles", pointSize: 12)
                         subItem.target = MenuActions.shared
                         subItem.state = pm.isCurrent ? .on : .off
                         subItem.representedObject = (profile: profile, model: pm)
@@ -233,14 +243,56 @@ public final class ModelSubmenuDelegate: NSObject, NSMenuDelegate {
         // 4. Custom Model Prompt
         menu.addItem(NSMenuItem.separator())
         let customItem = NSMenuItem(
-            title: "✏️ Enter Custom Model Name...",
+            title: "Enter Custom Model Name...",
             action: #selector(MenuActions.promptCustomModel(_:)),
             keyEquivalent: ""
         )
+        customItem.image = sfImage("pencil", pointSize: 12)
         customItem.target = MenuActions.shared
         customItem.representedObject = profile
         menu.addItem(customItem)
     }
+}
+
+// MARK: - SF Symbols & Status Dot Helpers
+
+@MainActor
+func sfImage(_ name: String, pointSize: CGFloat = 12, color: NSColor? = nil) -> NSImage? {
+    let base = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .medium)
+    let config: NSImage.SymbolConfiguration
+    if let color = color {
+        config = base.applying(NSImage.SymbolConfiguration(paletteColors: [color]))
+    } else {
+        config = base
+    }
+    let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+    img?.isTemplate = (color == nil)
+    return img
+}
+
+@MainActor
+func statusCircleImage(for status: ProfileStatus) -> NSImage {
+    let size = NSSize(width: 14, height: 14)
+    let color: NSColor
+    switch status {
+    case .running(_, let connected, _):
+        color = connected ? .systemGreen : .systemYellow
+    case .stopped:
+        color = .systemGray
+    case .transitioning:
+        color = .systemOrange
+    case .error:
+        color = .systemRed
+    }
+
+    let image = NSImage(size: size, flipped: false) { rect in
+        color.setFill()
+        let path = NSBezierPath(ovalIn: NSRect(x: 2, y: 2, width: 10, height: 10))
+        path.fill()
+        return true
+    }
+    image.isTemplate = false
+    return image
 }
 
 // MARK: - Menu Actions Coordinator

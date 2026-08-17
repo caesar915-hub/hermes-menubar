@@ -73,19 +73,19 @@ public final class StatusItemManager: NSObject {
 
         let runningCount = profiles.filter { $0.status.isRunning }.count
         let totalCount = profiles.count
-        let allRunning = (runningCount == totalCount && totalCount > 0)
-        let anyRunning = (runningCount > 0)
 
-        let dotColor = allRunning ? "🟢" : (anyRunning ? "🟡" : "⚪")
-        button.title = "⚡️ Hermes \(dotColor) [\(runningCount)/\(totalCount)]"
+        button.title = "Hermes [\(runningCount)/\(totalCount)]"
+        button.image = sfImage("paperplane.fill", pointSize: 12, color: runningCount > 0 ? .systemGreen : .secondaryLabelColor)
+        button.imagePosition = .imageLeft
 
         // Build combined menu
         let menu = NSMenu()
         menu.autoenablesItems = false
 
         let header = NSMenuItem(title: "Hermes Agent Profiles (\(runningCount)/\(totalCount) Active)", action: nil, keyEquivalent: "")
+        header.image = sfImage("cpu", pointSize: 13)
         header.attributedTitle = NSAttributedString(
-            string: "🤖 Hermes Agent Gateways",
+            string: "Hermes Agent Profiles",
             attributes: [.font: NSFont.boldSystemFont(ofSize: 13)]
         )
         header.isEnabled = false
@@ -93,47 +93,55 @@ public final class StatusItemManager: NSObject {
         menu.addItem(NSMenuItem.separator())
 
         for profile in profiles {
-            let statusEmoji = profile.status.isRunning ? "🟢" : "⚪"
-            let profileItem = NSMenuItem(title: "\(statusEmoji) \(profile.displayName)", action: nil, keyEquivalent: "")
+            let profileItem = NSMenuItem(title: profile.displayName, action: nil, keyEquivalent: "")
+            profileItem.image = statusCircleImage(for: profile.status)
             let sub = NSMenu()
 
             let pHeader = NSMenuItem(title: "Status: \(profile.status.statusText)", action: nil, keyEquivalent: "")
+            pHeader.image = statusCircleImage(for: profile.status)
             pHeader.isEnabled = false
             sub.addItem(pHeader)
             if let model = profile.modelName {
                 let mItem = NSMenuItem(title: "Model: \(model)", action: nil, keyEquivalent: "")
+                mItem.image = sfImage("brain", pointSize: 12)
                 mItem.isEnabled = false
                 sub.addItem(mItem)
             }
             sub.addItem(NSMenuItem.separator())
 
             if profile.status.isRunning {
-                let stop = NSMenuItem(title: "🛑 Stop", action: #selector(MenuActions.stopProfile(_:)), keyEquivalent: "")
+                let stop = NSMenuItem(title: "Stop", action: #selector(MenuActions.stopProfile(_:)), keyEquivalent: "")
+                stop.image = sfImage("stop.fill", pointSize: 12, color: .systemRed)
                 stop.target = MenuActions.shared
                 stop.representedObject = profile
                 sub.addItem(stop)
 
-                let restart = NSMenuItem(title: "🔄 Restart", action: #selector(MenuActions.restartProfile(_:)), keyEquivalent: "")
+                let restart = NSMenuItem(title: "Restart", action: #selector(MenuActions.restartProfile(_:)), keyEquivalent: "")
+                restart.image = sfImage("arrow.clockwise", pointSize: 12, color: .systemOrange)
                 restart.target = MenuActions.shared
                 restart.representedObject = profile
                 sub.addItem(restart)
             } else {
-                let start = NSMenuItem(title: "🚀 Start", action: #selector(MenuActions.startProfile(_:)), keyEquivalent: "")
+                let start = NSMenuItem(title: "Start", action: #selector(MenuActions.startProfile(_:)), keyEquivalent: "")
+                start.image = sfImage("play.fill", pointSize: 12, color: .systemGreen)
                 start.target = MenuActions.shared
                 start.representedObject = profile
                 sub.addItem(start)
             }
 
-            let tg = NSMenuItem(title: "📱 Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "")
+            let tg = NSMenuItem(title: "Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "")
+            tg.image = sfImage("paperplane.fill", pointSize: 12, color: .systemBlue)
             tg.target = MenuActions.shared
             sub.addItem(tg)
 
-            let chat = NSMenuItem(title: "💬 Open Terminal Chat", action: #selector(MenuActions.openChat(_:)), keyEquivalent: "")
+            let chat = NSMenuItem(title: "Open Terminal Chat", action: #selector(MenuActions.openChat(_:)), keyEquivalent: "")
+            chat.image = sfImage("terminal.fill", pointSize: 12)
             chat.target = MenuActions.shared
             chat.representedObject = profile
             sub.addItem(chat)
 
-            let logs = NSMenuItem(title: "📜 Tail Logs", action: #selector(MenuActions.openLogs(_:)), keyEquivalent: "")
+            let logs = NSMenuItem(title: "Tail Logs", action: #selector(MenuActions.openLogs(_:)), keyEquivalent: "")
+            logs.image = sfImage("doc.text.fill", pointSize: 12)
             logs.target = MenuActions.shared
             logs.representedObject = profile
             sub.addItem(logs)
@@ -144,25 +152,30 @@ public final class StatusItemManager: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
-        let openTgAll = NSMenuItem(title: "📱 Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "")
+        let openTgAll = NSMenuItem(title: "Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "")
+        openTgAll.image = sfImage("paperplane.fill", pointSize: 12, color: .systemBlue)
         openTgAll.target = MenuActions.shared
         menu.addItem(openTgAll)
 
-        let startAll = NSMenuItem(title: "🚀 Start All Profiles", action: #selector(MenuActions.startAllProfiles), keyEquivalent: "")
+        let startAll = NSMenuItem(title: "Start All Profiles", action: #selector(MenuActions.startAllProfiles), keyEquivalent: "")
+        startAll.image = sfImage("play.fill", pointSize: 12, color: .systemGreen)
         startAll.target = MenuActions.shared
         menu.addItem(startAll)
 
-        let stopAll = NSMenuItem(title: "🛑 Stop All Profiles", action: #selector(MenuActions.stopAllProfiles), keyEquivalent: "")
+        let stopAll = NSMenuItem(title: "Stop All Profiles", action: #selector(MenuActions.stopAllProfiles), keyEquivalent: "")
+        stopAll.image = sfImage("stop.fill", pointSize: 12, color: .systemRed)
         stopAll.target = MenuActions.shared
         menu.addItem(stopAll)
 
         menu.addItem(NSMenuItem.separator())
 
         let toggle = NSMenuItem(title: "Switch to Multi-Icon Mode", action: #selector(MenuActions.toggleDisplayMode), keyEquivalent: "")
+        toggle.image = sfImage("rectangle.grid.1x2.fill", pointSize: 12)
         toggle.target = MenuActions.shared
         menu.addItem(toggle)
 
-        let quit = NSMenuItem(title: "❌ Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "q")
+        quit.image = sfImage("power", pointSize: 12, color: .systemRed)
         quit.target = MenuActions.shared
         menu.addItem(quit)
 
