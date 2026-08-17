@@ -43,9 +43,18 @@ Monitor real-time **ON/OFF** status indicators for all your Hermes profiles and 
 
 ---
 
+---
+
 ## 🛠 Installation
 
-### Option 1: Quick Install (Build from Source)
+### Option 1: Homebrew (Recommended)
+
+```bash
+# Install via official Homebrew tap
+brew install caesar915-hub/tap/hermes-menubar
+```
+
+### Option 2: Quick Install (Build from Source)
 
 Clone the repository and run the build script:
 
@@ -55,15 +64,20 @@ cd hermes-menubar
 ./build.sh
 ```
 
-The script will compile the app with release optimizations, package `HermesMenuBar.app`, sign it, and install it to `~/Applications/HermesMenuBar.app`.
+---
 
-### Option 2: Build Manually with SwiftPM
+## 💻 Terminal Commands (Lowercase CLI)
 
-```bash
-swift build -c release
-```
+You can control and query the menu bar app directly from your terminal using clean, lowercase commands:
 
-The compiled binary will be in `.build/release/HermesMenuBar`.
+| Action | Terminal Command |
+|---|---|
+| **Check Status & PID** | `hermes-menubar` *(or `hermes-menubar status`)* |
+| **Launch App** | `hermes-menubar start` |
+| **Stop / Quit App** | `hermes-menubar stop` |
+| **Restart App** | `hermes-menubar restart` |
+| **Tail Gateway Logs** | `hermes-menubar logs` |
+| **CLI Help** | `hermes-menubar help` |
 
 ---
 

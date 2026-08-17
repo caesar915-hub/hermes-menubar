@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# hermes-menubar - CLI Controller for Hermes macOS Menu Bar
+# ==============================================================================
+
+set -e
+
+ACTION="${1:-status}"
+
+get_pid() {
+    pgrep -x "HermesMenuBar" 2>/dev/null || pgrep -fli "HermesMenuBar" 2>/dev/null || true
+}
+
+is_running() {
+    local pid
+    pid=$(get_pid)
+    [ -n "$pid" ]
+}
+
+app_path() {
+    if [ -d "/Applications/HermesMenuBar.app" ]; then
+        echo "/Applications/HermesMenuBar.app"
+    elif [ -d "${HOME}/Applications/HermesMenuBar.app" ]; then
+        echo "${HOME}/Applications/HermesMenuBar.app"
+    else
+        echo ""
+    fi
+}
+
+start_app() {
+    if is_running; then
+        local pid
+        pid=$(get_pid)
+        echo "⚡️ hermes-menubar is already running (pid: ${pid})."
+    else
+        local app
+        app=$(app_path)
+        if [ -n "${app}" ]; then
+            echo "🚀 Starting hermes-menubar from ${app}..."
+            open "${app}"
+        else
+            echo "🚀 Starting hermes-menubar..."
+            open -a "HermesMenuBar" 2>/dev/null || true
+        fi
+        sleep 0.8
+        local pid
+        pid=$(get_pid)
+        if [ -n "$pid" ]; then
+            echo "✅ hermes-menubar is running (pid: ${pid})."
+        else
+            echo "❌ Failed to start hermes-menubar. Run './build.sh' to compile."
+            exit 1
+        fi
+    fi
+}
+
+stop_app() {
+    if is_running; then
+        local pid
+        pid=$(get_pid)
+        echo "🛑 Stopping hermes-menubar (pid: ${pid})..."
+        killall "HermesMenuBar" 2>/dev/null || kill -9 "${pid}" 2>/dev/null || true
+        sleep 0.5
+        echo "✅ hermes-menubar stopped."
+    else
+        echo "⚪ hermes-menubar is not running."
+    fi
+}
+
+restart_app() {
+    echo "🔄 Restarting hermes-menubar..."
+    stop_app
+    sleep 0.5
+    start_app
+}
+
+status_app() {
+    if is_running; then
+        local pid
+        pid=$(get_pid)
+        echo "🟢 hermes-menubar is running (pid: ${pid})"
+    else
+        echo "⚪ hermes-menubar is stopped (use 'hermes-menubar start' to launch)"
+    fi
+}
+
+logs_app() {
+    local logfile="${HERMES_HOME:-${HOME}/.hermes}/logs/gateway.log"
+    if [ -f "${logfile}" ]; then
+        echo "📜 Tailing ${logfile} (Ctrl+C to stop)..."
+        tail -f "${logfile}"
+    else
+        echo "❌ No log file found at ${logfile}"
+    fi
+}
+
+show_help() {
+    echo "Hermes Menu Bar CLI"
+    echo ""
+    echo "Usage: hermes-menubar [command]"
+    echo ""
+    echo "Commands:"
+    echo "  start     Launch the menu bar app"
+    echo "  stop      Stop / quit the menu bar app"
+    echo "  restart   Restart the menu bar app"
+    echo "  status    Show running status and PID (default)"
+    echo "  logs      Tail live gateway logs"
+    echo "  help      Show this help message"
+}
+
+case "${ACTION}" in
+    start|launch|run)
+        start_app
+        ;;
+    stop|quit|kill)
+        stop_app
+        ;;
+    restart|reload)
+        restart_app
+        ;;
+    status|check|pid)
+        status_app
+        ;;
+    logs|log)
+        logs_app
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        # Default behavior: if no recognized subcommand, start or show status
+        if is_running; then
+            status_app
+        else
+            start_app
+        fi
+        ;;
+esac

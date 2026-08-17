@@ -123,20 +123,10 @@ echo "======================================================"
 
 # 8. Install CLI launcher script to ~/.local/bin/hermes-menubar
 mkdir -p "${HOME}/.local/bin"
-cat << 'CLI_EOF' > "${HOME}/.local/bin/hermes-menubar"
-#!/usr/bin/env bash
-if pgrep -x "HermesMenuBar" >/dev/null 2>&1; then
-    echo "⚡️ Hermes Menu Bar is already running (PID $(pgrep -x HermesMenuBar))."
-else
-    echo "🚀 Launching Hermes Menu Bar..."
-    open -a "HermesMenuBar" 2>/dev/null || open "$HOME/Applications/HermesMenuBar.app" 2>/dev/null || open "/Applications/HermesMenuBar.app"
-    sleep 0.5
-    if pgrep -x "HermesMenuBar" >/dev/null 2>&1; then
-        echo "✅ Hermes Menu Bar running (PID $(pgrep -x HermesMenuBar))."
-    fi
+if [ -f "${SCRIPT_DIR}/bin/hermes-menubar" ]; then
+    cp "${SCRIPT_DIR}/bin/hermes-menubar" "${HOME}/.local/bin/hermes-menubar"
+    chmod +x "${HOME}/.local/bin/hermes-menubar"
 fi
-CLI_EOF
-chmod +x "${HOME}/.local/bin/hermes-menubar"
 
 # 9. Create DMG if requested
 if [ "$CREATE_DMG" = true ]; then
