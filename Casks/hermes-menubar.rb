@@ -7,7 +7,7 @@ cask "hermes-menubar" do
   desc "Native macOS menu bar utility for Hermes Agent & Telegram gateways"
   homepage "https://github.com/caesar915-hub/hermes-menubar"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "HermesMenuBar.app"
 
