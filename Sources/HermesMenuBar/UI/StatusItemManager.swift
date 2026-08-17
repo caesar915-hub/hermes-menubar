@@ -84,10 +84,6 @@ public final class StatusItemManager: NSObject {
 
         let header = NSMenuItem(title: "Hermes Agent Profiles (\(runningCount)/\(totalCount) Active)", action: nil, keyEquivalent: "")
         header.image = sfImage("cpu", pointSize: 13)
-        header.attributedTitle = NSAttributedString(
-            string: "Hermes Agent Profiles",
-            attributes: [.font: NSFont.boldSystemFont(ofSize: 13)]
-        )
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(NSMenuItem.separator())
@@ -174,7 +170,7 @@ public final class StatusItemManager: NSObject {
         toggle.target = MenuActions.shared
         menu.addItem(toggle)
 
-        let quit = NSMenuItem(title: "Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "")
         quit.image = sfImage("power", pointSize: 12, color: .systemRed)
         quit.target = MenuActions.shared
         menu.addItem(quit)

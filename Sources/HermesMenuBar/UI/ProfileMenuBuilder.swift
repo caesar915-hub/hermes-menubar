@@ -15,8 +15,6 @@ public final class ProfileMenuBuilder {
         // 1. Profile Title & Header
         let titleItem = NSMenuItem(title: "Hermes: \(profile.displayName)", action: nil, keyEquivalent: "")
         titleItem.image = sfImage("cpu", pointSize: 13)
-        let titleFont = NSFont.boldSystemFont(ofSize: 13)
-        titleItem.attributedTitle = NSAttributedString(string: "Hermes: \(profile.displayName)", attributes: [.font: titleFont])
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 
@@ -43,20 +41,20 @@ public final class ProfileMenuBuilder {
         // 2. Main Process Controls for this profile
         switch profile.status {
         case .running:
-            let stopItem = NSMenuItem(title: "Stop Gateway", action: #selector(MenuActions.stopProfile(_:)), keyEquivalent: "s")
+            let stopItem = NSMenuItem(title: "Stop Gateway", action: #selector(MenuActions.stopProfile(_:)), keyEquivalent: "")
             stopItem.image = sfImage("stop.fill", pointSize: 12, color: .systemRed)
             stopItem.target = MenuActions.shared
             stopItem.representedObject = profile
             menu.addItem(stopItem)
 
-            let restartItem = NSMenuItem(title: "Restart Gateway", action: #selector(MenuActions.restartProfile(_:)), keyEquivalent: "r")
+            let restartItem = NSMenuItem(title: "Restart Gateway", action: #selector(MenuActions.restartProfile(_:)), keyEquivalent: "")
             restartItem.image = sfImage("arrow.clockwise", pointSize: 12, color: .systemOrange)
             restartItem.target = MenuActions.shared
             restartItem.representedObject = profile
             menu.addItem(restartItem)
 
         case .stopped, .error:
-            let startItem = NSMenuItem(title: "Start Gateway", action: #selector(MenuActions.startProfile(_:)), keyEquivalent: "s")
+            let startItem = NSMenuItem(title: "Start Gateway", action: #selector(MenuActions.startProfile(_:)), keyEquivalent: "")
             startItem.image = sfImage("play.fill", pointSize: 12, color: .systemGreen)
             startItem.target = MenuActions.shared
             startItem.representedObject = profile
@@ -72,24 +70,24 @@ public final class ProfileMenuBuilder {
         menu.addItem(NSMenuItem.separator())
 
         // 3. Quick Launchers
-        let tgAppItem = NSMenuItem(title: "Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "m")
+        let tgAppItem = NSMenuItem(title: "Open Telegram App", action: #selector(MenuActions.openTelegram), keyEquivalent: "")
         tgAppItem.image = sfImage("paperplane.fill", pointSize: 12, color: .systemBlue)
         tgAppItem.target = MenuActions.shared
         menu.addItem(tgAppItem)
 
-        let chatItem = NSMenuItem(title: "Open Chat in Terminal", action: #selector(MenuActions.openChat(_:)), keyEquivalent: "t")
+        let chatItem = NSMenuItem(title: "Open Chat in Terminal", action: #selector(MenuActions.openChat(_:)), keyEquivalent: "")
         chatItem.image = sfImage("terminal.fill", pointSize: 12)
         chatItem.target = MenuActions.shared
         chatItem.representedObject = profile
         menu.addItem(chatItem)
 
-        let logItem = NSMenuItem(title: "Tail Live Logs (gateway.log)", action: #selector(MenuActions.openLogs(_:)), keyEquivalent: "l")
+        let logItem = NSMenuItem(title: "Tail Live Logs (gateway.log)", action: #selector(MenuActions.openLogs(_:)), keyEquivalent: "")
         logItem.image = sfImage("doc.text.fill", pointSize: 12)
         logItem.target = MenuActions.shared
         logItem.representedObject = profile
         menu.addItem(logItem)
 
-        let folderItem = NSMenuItem(title: "Open Profile Folder in Finder", action: #selector(MenuActions.openFolder(_:)), keyEquivalent: "o")
+        let folderItem = NSMenuItem(title: "Open Profile Folder in Finder", action: #selector(MenuActions.openFolder(_:)), keyEquivalent: "")
         folderItem.image = sfImage("folder.fill", pointSize: 12)
         folderItem.target = MenuActions.shared
         folderItem.representedObject = profile
@@ -141,7 +139,7 @@ public final class ProfileMenuBuilder {
         menu.addItem(NSMenuItem.separator())
 
         // 6. Quit
-        let quitItem = NSMenuItem(title: "Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit Hermes Menu Bar", action: #selector(MenuActions.quitApp), keyEquivalent: "")
         quitItem.image = sfImage("power", pointSize: 12, color: .systemRed)
         quitItem.target = MenuActions.shared
         menu.addItem(quitItem)
