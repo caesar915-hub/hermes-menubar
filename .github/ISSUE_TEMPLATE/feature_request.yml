@@ -1,0 +1,29 @@
+name: 💡 Feature Request
+description: Suggest a new idea or improvement for Hermes Menu Bar
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make Hermes Menu Bar even better? Let us know!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / Use Case
+      description: Is your feature request related to a specific problem or workflow?
+      placeholder: "I find it difficult to..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.

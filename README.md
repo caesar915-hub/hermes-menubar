@@ -1,9 +1,12 @@
 # ⚡️ Hermes Menu Bar for macOS
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/caesar915-hub/hermes-menubar?color=blue&label=Release)](https://github.com/caesar915-hub/hermes-menubar/releases)
+[![Homebrew Tap](https://img.shields.io/badge/Homebrew-caesar915--hub%2Ftap-gold.svg)](https://github.com/caesar915-hub/homebrew-tap)
 [![Platform](https://img.shields.io/badge/Platform-macOS%2013%2B%20(Ventura%20%7C%20Sonoma%20%7C%20Sequoia%20%7C%20Tahoe)-black.svg)](https://apple.com/macos)
 [![Swift](https://img.shields.io/badge/Swift-5.9%2B%20%7C%206.0%2B-orange.svg)](https://swift.org)
 [![Architecture](https://img.shields.io/badge/Architecture-Universal%20(Apple%20Silicon%20%26%20Intel)-purple.svg)](https://apple.com)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 A native, lightweight macOS menu bar utility for [Hermes Agent](https://github.com/NousResearch/Hermes-Agent), inspired by [exelban/stats](https://github.com/exelban/stats).
 
