@@ -1,0 +1,73 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release Version (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+
+jobs:
+  release:
+    name: Build, Package & Release
+    runs-on: macos-14
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "TAG=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Select Xcode Developer Tools
+        run: sudo xcode-select -switch /Applications/Xcode.app
+
+      - name: Build Universal Binary (arm64 + x86_64)
+        run: |
+          swift build -c release --arch arm64 --arch x86_64
+
+      - name: Package App Bundle
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          ./build.sh --universal --no-launch
+
+      - name: Create DMG Disk Image
+        run: |
+          chmod +x scripts/create_dmg.sh
+          ./scripts/create_dmg.sh "${PWD}/HermesMenuBar.app" "${{ steps.get_version.outputs.VERSION }}"
+
+      - name: Create ZIP Archive
+        run: |
+          cd "${PWD}"
+          zip -r -y "dist/HermesMenuBar-${{ steps.get_version.outputs.VERSION }}.zip" "HermesMenuBar.app"
+          cd dist
+          shasum -a 256 "HermesMenuBar-${{ steps.get_version.outputs.VERSION }}.zip" >> "HermesMenuBar-${{ steps.get_version.outputs.VERSION }}.dmg.sha256"
+          cp "HermesMenuBar-${{ steps.get_version.outputs.VERSION }}.dmg.sha256" "SHA256SUMS.txt"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Hermes Menu Bar v${{ steps.get_version.outputs.VERSION }}"
+          tag_name: "${{ steps.get_version.outputs.TAG }}"
+          draft: false
+          prerelease: false
+          files: |
+            dist/HermesMenuBar-${{ steps.get_version.outputs.VERSION }}.dmg
+            dist/HermesMenuBar-${{ steps.get_version.outputs.VERSION }}.zip
+            dist/SHA256SUMS.txt
+          generate_release_notes: true

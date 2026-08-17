@@ -11,6 +11,7 @@ xcuserdata/
 
 # App Bundles & Local Artifacts
 HermesMenuBar.app
+dist/
 
 # macOS
 .DS_Store

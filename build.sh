@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Hermes Menu Bar App - Build & Installer Script
+# Hermes Menu Bar App - Universal Build, Package & Installer Script
 # ==============================================================================
 
 set -e
@@ -8,9 +8,28 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="HermesMenuBar"
 BUNDLE_NAME="${APP_NAME}.app"
-TARGET_DIR="${SCRIPT_DIR}/.build/release"
 APP_BUNDLE="${SCRIPT_DIR}/${BUNDLE_NAME}"
 INSTALL_DIR="${HOME}/Applications"
+BUILD_UNIVERSAL=false
+CREATE_DMG=false
+AUTO_LAUNCH=true
+
+for arg in "$@"; do
+    case $arg in
+        --universal)
+            BUILD_UNIVERSAL=true
+            shift
+            ;;
+        --dmg)
+            CREATE_DMG=true
+            shift
+            ;;
+        --no-launch)
+            AUTO_LAUNCH=false
+            shift
+            ;;
+    esac
+done
 
 echo "======================================================"
 echo "  🔨 Building Hermes Telegram Menu Bar App"
@@ -19,7 +38,15 @@ echo "======================================================"
 cd "${SCRIPT_DIR}"
 
 # 1. Compile release binary with SwiftPM
-swift build -c release
+if [ "$BUILD_UNIVERSAL" = true ]; then
+    echo "▶ Building Universal binary (arm64 + x86_64)..."
+    swift build -c release --arch arm64 --arch x86_64
+    BINARY_SOURCE="${SCRIPT_DIR}/.build/apple/Products/Release/${APP_NAME}"
+else
+    echo "▶ Building native binary..."
+    swift build -c release
+    BINARY_SOURCE="${SCRIPT_DIR}/.build/release/${APP_NAME}"
+fi
 
 # 2. Recreate App Bundle
 rm -rf "${APP_BUNDLE}"
@@ -27,7 +54,7 @@ mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
 
 # 3. Copy binary
-cp "${TARGET_DIR}/${APP_NAME}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
+cp "${BINARY_SOURCE}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 
 # 4. Copy App Icon
@@ -71,8 +98,13 @@ cat << 'EOF' > "${APP_BUNDLE}/Contents/Info.plist"
 </plist>
 EOF
 
-# 6. Ad-hoc Codesign
-codesign -s - --force --deep "${APP_BUNDLE}" 2>/dev/null || true
+# 6. Codesign (Hardened Runtime if certificate present, or ad-hoc)
+if [ -f "${SCRIPT_DIR}/scripts/notarize.sh" ]; then
+    chmod +x "${SCRIPT_DIR}/scripts/notarize.sh"
+    "${SCRIPT_DIR}/scripts/notarize.sh" "${APP_BUNDLE}" "" || codesign -s - --force --deep "${APP_BUNDLE}" 2>/dev/null || true
+else
+    codesign -s - --force --deep "${APP_BUNDLE}" 2>/dev/null || true
+fi
 
 # 7. Install to ~/Applications
 mkdir -p "${INSTALL_DIR}"
@@ -89,10 +121,17 @@ echo "======================================================"
 echo "  ✅ Installed to ${INSTALL_DIR}/${BUNDLE_NAME}"
 echo "======================================================"
 
-# 8. Restart running instance if any
-killall "${APP_NAME}" 2>/dev/null || true
-sleep 0.5
-open "${INSTALL_DIR}/${BUNDLE_NAME}"
+# 8. Create DMG if requested
+if [ "$CREATE_DMG" = true ]; then
+    chmod +x "${SCRIPT_DIR}/scripts/create_dmg.sh"
+    "${SCRIPT_DIR}/scripts/create_dmg.sh" "${APP_BUNDLE}" "1.0.0"
+fi
 
-echo "  🚀 Hermes Telegram Menu Bar launched successfully!"
-echo "======================================================"
+# 9. Restart running instance if requested
+if [ "$AUTO_LAUNCH" = true ]; then
+    killall "${APP_NAME}" 2>/dev/null || true
+    sleep 0.5
+    open "${INSTALL_DIR}/${BUNDLE_NAME}"
+    echo "  🚀 Hermes Telegram Menu Bar launched successfully!"
+    echo "======================================================"
+fi
