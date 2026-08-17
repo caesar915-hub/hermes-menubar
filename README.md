@@ -47,7 +47,7 @@ Monitor real-time **ON/OFF** status indicators for all your Hermes profiles and 
 Clone the repository and run the build script:
 
 ```bash
-git clone https://github.com/your-username/hermes-menubar.git
+git clone https://github.com/caesar915-hub/hermes-menubar.git
 cd hermes-menubar
 ./build.sh
 ```
