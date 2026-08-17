@@ -1,0 +1,26 @@
+# Swift / Xcode
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserstate
+project.xcworkspace/
+xcuserdata/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# App Bundles & Local Artifacts
+HermesMenuBar.app
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# User Environment
+.env
+.env.local
+*.log

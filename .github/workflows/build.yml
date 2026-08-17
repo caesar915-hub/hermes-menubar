@@ -1,0 +1,25 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build HermesMenuBar
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode.app
+
+      - name: Build Release Binary
+        run: swift build -c release
+
+      - name: Package App Bundle
+        run: ./build.sh
